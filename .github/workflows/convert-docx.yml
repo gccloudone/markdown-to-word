@@ -1,0 +1,21 @@
+name: Use Markdown to DOCX Converter
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  markdown-to-docx:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Use Markdown to DOCX Action
+        uses: gccloudone/markdown-docx-converter@v1
+        with:
+          markdown_file: "sample.md"
+          output_file: "output/sample.docx"
+          reference_doc: "template/ssc-template-v2.7.dotx"
