@@ -1,17 +1,21 @@
-name: "Markdown to DOCX Converter"
-description: "Converts a Markdown file to a DOCX Word document using Pandoc."
+name: "Markdown to Word Converter"
+description: "Converts a Markdown file to a Word document using Pandoc."
 author: "gccloudone"
+
 inputs:
+  default_title:
+    description: "Default title for the Word document."
+    required: true
   markdown_file:
-    description: "Path to the Markdown file to be converted"
+    description: "Path to the Markdown file to be converted."
     required: true
   output_file:
-    description: "Path to the output DOCX file"
+    description: "Path to the output DOCX file."
     required: false
     default: "output/output.docx"
   reference_doc:
-    description: "Path to the DOCX reference template"
-    required: true
+    description: "Path to the DOCX reference template."
+    required: false
     default: "template/ssc-template-v2.7.dotx"
 
 runs:
@@ -21,14 +25,23 @@ runs:
       uses: actions/checkout@v3
 
     - name: Install Pandoc
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y pandoc
-        pip3 install python-docx
-
-    - name: Run Markdown to DOCX Conversion
       shell: bash
       run: |
-        ./convert-to-word.sh "${{ inputs.markdown_file }}" \
-                             "${{ inputs.output_file }}" \
-                             "${{ inputs.reference_doc }}"
+        echo "Installing Pandoc"
+        wget https://github.com/jgm/pandoc/releases/download/3.9.0.2/pandoc-3.9.0.2-1-amd64.deb
+        sudo dpkg -i pandoc-3.9.0.2-1-amd64.deb
+        pandoc --version
+
+    - name: Install Python Dependencies
+      shell: bash
+      run: |
+        echo "Installing Python dependencies..."
+        pip3 install python-docx
+
+    - name: Run Markdown to Word Conversion
+      shell: bash
+      run: |
+        "${{ github.action_path }}/convert-to-word.sh" "${{ inputs.default_title }}" \
+                                                       "${{ inputs.markdown_file }}" \
+                                                       "${{ inputs.output_file }}" \
+                                                       "${{ github.action_path }}/${{ inputs.reference_doc }}"

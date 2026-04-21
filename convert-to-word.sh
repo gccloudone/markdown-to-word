@@ -38,16 +38,21 @@ if [[ ! -f "$REFERENCE_DOC" ]]; then
     exit 1
 fi
 
+if [ -z "$GITHUB_ACTION_PATH" ]; then
+  export GITHUB_ACTION_PATH="."
+fi
+
 # === CONVERT TO WORD ===
 echo "🔄 Converting '$MARKDOWN_FILE' to '$OUTPUT_FILE' using template '$REFERENCE_DOC' with title '$TITLE'..."
 pandoc "$MARKDOWN_FILE" --metadata=title:"$TITLE" \
-                        --lua-filter=filters/pagebreak.lua \
-                        --lua-filter=filters/toc.lua \
+                        --lua-filter=$GITHUB_ACTION_PATH/filters/pagebreak.lua \
+                        --lua-filter=$GITHUB_ACTION_PATH/filters/toc.lua \
                         -o "$OUTPUT_FILE" \
                         --reference-doc="$REFERENCE_DOC"
 
 # Run any additional processing scripts (if needed):
-python3 scripts/fix_header.py "$OUTPUT_FILE" "$TITLE"
+python3 $GITHUB_ACTION_PATH/scripts/update_header.py "$OUTPUT_FILE" "$TITLE"
+python3 $GITHUB_ACTION_PATH/scripts/update_tables.py "$OUTPUT_FILE"
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -eq 0 ]]; then
