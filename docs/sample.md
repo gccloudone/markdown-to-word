@@ -1,17 +1,3 @@
----
-title: "GCCO"
-subtitle: "Sample Document"
-date: "2026-01-01"
-version: "v0.0.1"
----
-
-\newpage
-
-::: {#toc}
-:::
-
-\newpage
-
 # Ergo pedis ictus sacra
 
 ## Adfata dum spectacula et

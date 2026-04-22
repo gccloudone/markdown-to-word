@@ -1,7 +1,7 @@
 #!/bin/bash
 # === CONFIGURATION ===
 DEFAULT_TITLE="[Untitled Document]"        # Default title for the DOCX file
-DEFAULT_MD_FILE="sample.md"                # Default Markdown file path
+DEFAULT_MD_FILE="docs/sample.md"                # Default Markdown file path
 DEFAULT_OUTPUT_FILE="output/sample.docx"   # Default output file path
 DEFAULT_REFERENCE_DOC="template/ssc-template-v2.7.dotx"  # Default reference template
 
@@ -47,6 +47,7 @@ echo "🔄 Converting '$MARKDOWN_FILE' to '$OUTPUT_FILE' using template '$REFERE
 pandoc "$MARKDOWN_FILE" --metadata=title:"$TITLE" \
                         --lua-filter=$GITHUB_ACTION_PATH/filters/pagebreak.lua \
                         --lua-filter=$GITHUB_ACTION_PATH/filters/toc.lua \
+                        --lua-filter=$GITHUB_ACTION_PATH/filters/mermaid.lua \
                         -o "$OUTPUT_FILE" \
                         --reference-doc="$REFERENCE_DOC"
 

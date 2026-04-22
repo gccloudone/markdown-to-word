@@ -32,6 +32,13 @@ runs:
         sudo dpkg -i pandoc-3.9.0.2-1-amd64.deb
         pandoc --version
 
+    - name: Install Mermaid CLI
+      shell: bash
+      run: |
+        echo "Installing Mermaid CLI..."
+        npm install -g @mermaid-js/mermaid-cli
+        mmdc -V
+
     - name: Install Python Dependencies
       shell: bash
       run: |
