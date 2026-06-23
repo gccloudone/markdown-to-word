@@ -29,7 +29,7 @@ usage() {
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     usage
-}
+fi
 
 # === CHECK DEPENDENCIES ===
 if ! command -v pandoc >/dev/null 2>&1; then
