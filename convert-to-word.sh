@@ -53,11 +53,13 @@ if ! command -v mmdc >/dev/null 2>&1; then
 fi
 
 # === RESOLVE PATHS ===
+WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
+
 if [[ "$MARKDOWN_FILE" != /* ]]; then
-    MARKDOWN_FILE="$REPO_ROOT/$MARKDOWN_FILE"
+    MARKDOWN_FILE="$WORKSPACE_ROOT/$MARKDOWN_FILE"
 fi
 if [[ "$OUTPUT_FILE" != /* ]]; then
-    OUTPUT_FILE="$REPO_ROOT/$OUTPUT_FILE"
+    OUTPUT_FILE="$WORKSPACE_ROOT/$OUTPUT_FILE"
 fi
 if [[ "$REFERENCE_DOC" != /* ]]; then
     REFERENCE_DOC="$REPO_ROOT/$REFERENCE_DOC"
