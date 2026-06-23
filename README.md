@@ -27,3 +27,27 @@ TITLE="My Document" MARKDOWN_FILE="docs/sample.md" OUTPUT_FILE="output/sample.do
 
 - The script resolves relative paths from the repository root.
 - Output directories are created automatically.
+
+## GitHub Action
+
+This repository also includes a composite GitHub Action. To use it from a workflow:
+
+```yaml
+name: Markdown to Word
+on:
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gccloudone/markdown-to-word@main
+        with:
+          default_title: "My Document"
+          markdown_file: "docs/sample.md"
+          output_file: "output/sample.docx"
+          reference_doc: "template/ssc-template-v2.7.dotx"
+```
+
+The action installs dependencies from `requirements.txt` and then runs `convert-to-word.sh` with the provided inputs.

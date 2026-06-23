@@ -43,7 +43,7 @@ runs:
       shell: bash
       run: |
         echo "Installing Python dependencies..."
-        pip3 install python-docx
+        pip3 install -r "${{ github.action_path }}/requirements.txt"
 
     - name: Run Markdown to Word Conversion
       shell: bash
