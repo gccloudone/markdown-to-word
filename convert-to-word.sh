@@ -7,7 +7,7 @@ DEFAULT_MD_FILE="docs/sample.md"          # Default Markdown file path
 DEFAULT_OUTPUT_FILE="output/sample.docx"  # Default output file path
 DEFAULT_REFERENCE_DOC="template/ssc-template-v2.7.dotx"  # Default reference template
 DEFAULT_CONVERT_TABLES="true"            # Convert tables to sections (true/false)
-DEFAULT_TABLE_FORMAT="pair"               # Table conversion format: pair, columns, or list
+DEFAULT_TABLE_FORMAT="definition"        # Table conversion format: definition, columns, pair, or list
 DEFAULT_CLASSIFICATION=""                 # Classification text (e.g., "UNCLASSIFIED")
 
 # Resolve the repository and script directories so relative paths work from any working directory.

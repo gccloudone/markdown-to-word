@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-Convert markdown tables to sections/headings for better Word rendering.
+Convert markdown tables to sections for better Word rendering.
 
-This script transforms markdown tables into properly formatted sections where
-each row becomes a heading with its content, making them render beautifully in Word.
+This script transforms markdown tables into properly formatted content where
+table headers become bold labels and values become regular text.
 
 Usage:
     python tables_to_sections.py <input_file.md> [output_file.md] [format]
 
 Formats:
-    'pair'     - Each row: "### Header1: Value1 | Header2: Value2" (default)
-    'columns'  - Each cell as separate section: "### Header1\nValue1\n### Header2\nValue2"
-    'list'     - Bullet list format: "- **Header1:** Value1"
+    'definition' - **Header:** value (RECOMMENDED - clean, no excessive headings)
+    'columns'    - ## Header\nvalue (headers as actual headings)
+    'pair'       - ### Header1: Value1 | Header2: Value2 (compact, all in one heading)
+    'list'       - - **Header:** value (bullet list)
 """
 
 import sys
@@ -70,8 +71,8 @@ def table_to_pair_format(headers, rows, heading_level=3):
     return '\n'.join(sections)
 
 
-def table_to_columns_format(headers, rows, heading_level=3):
-    """Convert table to columns format: Each cell as separate section"""
+def table_to_columns_format(headers, rows, heading_level=2):
+    """Convert table to columns format: Each cell as separate section with header as heading and value as content"""
     sections = []
     for row in rows:
         if len(row) != len(headers):
@@ -81,6 +82,19 @@ def table_to_columns_format(headers, rows, heading_level=3):
                 sections.append(f"{'#' * heading_level} {header}")
                 sections.append(f"{value}")
                 sections.append('')
+    return '\n'.join(sections)
+
+
+def table_to_definition_format(headers, rows):
+    """Convert table to definition/list format: Cleaner look with headers as bold text, not headings"""
+    sections = []
+    for row in rows:
+        if len(row) != len(headers):
+            continue
+        for header, value in zip(headers, row):
+            if value:  # Only add non-empty values
+                sections.append(f"**{header}:** {value}")
+        sections.append('')  # Blank line between rows
     return '\n'.join(sections)
 
 
@@ -143,6 +157,11 @@ def convert_markdown(input_path, output_path=None, format_type='pair', heading_l
                         table_data['headers'], 
                         table_data['rows']
                     )
+                elif format_type == 'definition':
+                    converted = table_to_definition_format(
+                        table_data['headers'], 
+                        table_data['rows']
+                    )
                 else:  # 'pair' format (default)
                     converted = table_to_pair_format(
                         table_data['headers'], 
@@ -178,17 +197,18 @@ if __name__ == "__main__":
         print("Usage: python tables_to_sections.py <input_file.md> [output_file.md] [format] [heading_level]")
         print()
         print("Formats:")
-        print("  'pair'     - Each row: '### Header1: Value1 | Header2: Value2' (default)")
-        print("  'columns'  - Each cell as separate section: '### Header1\\nValue1' ")
-        print("  'list'     - Bullet list format: '- **Header1:** Value1'")
+        print("  'definition' - **Header:** value (bold labels, no headings) - RECOMMENDED")
+        print("  'columns'    - ## Header\\nvalue (headers as headings, level 2)")
+        print("  'pair'       - ### Header1: Value1 | Header2: Value2 (compact)")
+        print("  'list'       - - **Header:** value (bullet list)")
         print()
         print("Example:")
-        print("  python tables_to_sections.py docs/ra-03.md docs/ra-03-fixed.md pair 3")
+        print("  python tables_to_sections.py docs/ra-03.md docs/ra-03-fixed.md definition")
         sys.exit(1)
     
     input_file = sys.argv[1]
     output_file = sys.argv[2] if len(sys.argv) > 2 else None
-    format_type = sys.argv[3] if len(sys.argv) > 3 else 'pair'
-    heading_level = int(sys.argv[4]) if len(sys.argv) > 4 else 3
+    format_type = sys.argv[3] if len(sys.argv) > 3 else 'definition'
+    heading_level = int(sys.argv[4]) if len(sys.argv) > 4 else 2
     
     convert_markdown(input_file, output_file, format_type, heading_level)

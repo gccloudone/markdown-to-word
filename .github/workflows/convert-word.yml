@@ -15,9 +15,9 @@ on:
         required: false
         default: 'markdown-to-word'
       title:
-        description: 'Document title'
+        description: 'Document title (defaults to filename if not provided)'
         required: false
-        default: 'Document'
+        default: ''
       classification:
         description: 'Classification text (e.g., UNCLASSIFIED)'
         required: false
@@ -27,9 +27,9 @@ on:
         required: false
         default: 'true'
       table_format:
-        description: 'Table conversion format (pair, columns, list)'
+        description: 'Table conversion format (definition, columns, pair, or list)'
         required: false
-        default: 'pair'
+        default: 'definition'
 
 jobs:
   markdown-to-word:
@@ -53,9 +53,22 @@ jobs:
           fi
           echo "BASENAME=$BASENAME" >> $GITHUB_OUTPUT
 
+      - name: Extract title from filename
+        id: extract_title
+        run: |
+          if [ -n "${{ inputs.title }}" ]; then
+            TITLE="${{ inputs.title }}"
+          else
+            # Extract title from markdown filename
+            BASENAME=$(basename "${{ inputs.markdown_file }}" .md)
+            # Convert to title case (e.g., ra-03 -> RA-03)
+            TITLE=$(echo "$BASENAME" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1')
+          fi
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+
       - name: Convert Markdown to Word
         run: |
-          "${{ github.action_path }}/convert-to-word.sh" "${{ inputs.title }}" \
+          "${{ github.action_path }}/convert-to-word.sh" "${{ steps.extract_title.outputs.title }}" \
             "${{ inputs.markdown_file != '' && inputs.markdown_file || format('{0}/combined.md', runner.temp) }}" \
             "output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx" \
             "${{ github.action_path }}/template/ssc-template-v2.7.dotx" \
