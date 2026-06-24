@@ -22,13 +22,13 @@ inputs:
     required: false
     default: "true"
   table_format:
-    description: "Table conversion format (pair, columns, or list)."
+    description: "Table conversion format (definition, columns, pair, or list)."
     required: false
-    default: "pair"
+    default: "definition"
   classification:
     description: "Classification text for header (e.g., UNCLASSIFIED)."
     required: false
-    default: ""
+    default: "UNCLASSIFIED"
 
 runs:
   using: "composite"

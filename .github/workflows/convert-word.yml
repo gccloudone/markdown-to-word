@@ -21,7 +21,7 @@ on:
       classification:
         description: 'Classification text (e.g., UNCLASSIFIED)'
         required: false
-        default: ''
+        default: 'UNCLASSIFIED'
       convert_tables:
         description: 'Convert tables to sections'
         required: false
