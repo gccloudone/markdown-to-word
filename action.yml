@@ -22,9 +22,9 @@ inputs:
     required: false
     default: "true"
   table_format:
-    description: "Table conversion format (definition, columns, pair, or list)."
+    description: "Table conversion format (split, definition, columns, pair, or list)."
     required: false
-    default: "definition"
+    default: "split"
   classification:
     description: "Classification text for header (e.g., UNCLASSIFIED)."
     required: false

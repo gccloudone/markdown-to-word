@@ -46,13 +46,17 @@ def update_header(docx_path, title_text, classification=None, font_size=14, bold
         for paragraph in paragraphs:
             paragraph.text = ''
 
+        # Convert title to ALL CAPS if classification is present (military style)
+        display_title = title_text.upper() if classification else title_text
+        
         # Use or create first paragraph for the title
         if paragraphs:
             header_para = paragraphs[0]
         else:
             header_para = header.add_paragraph()
         
-        header_para.text = title_text
+        # Set title text (ALL CAPS if classification exists)
+        header_para.text = display_title
 
         # Apply styling to title
         for run in header_para.runs:
@@ -60,19 +64,16 @@ def update_header(docx_path, title_text, classification=None, font_size=14, bold
             run.font.bold = bold
         header_para.alignment = alignment
         
-        # Add classification text below title if provided
+        # Add classification text on the RIGHT side of the same line if provided
         if classification:
-            # Add a new paragraph for classification
-            if len(paragraphs) > 1:
-                class_para = paragraphs[1]
-            else:
-                class_para = header.add_paragraph()
+            # Create a single line: TITLE                              UNCLASSIFIED
+            # We'll use a tab or spaces to separate them
+            header_para.text = f"{display_title}\t\t{classification}"
             
-            class_para.text = classification
-            for run in class_para.runs:
-                run.font.size = Pt(classification_font_size)
-                run.font.bold = False
-            class_para.alignment = alignment
+            # Style the entire line
+            for run in header_para.runs:
+                run.font.size = Pt(font_size)
+                run.font.bold = bold
 
     # Save the updated document
     doc.save(docx_path)

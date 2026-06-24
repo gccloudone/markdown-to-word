@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Convert markdown tables to sections for better Word rendering.
+Convert markdown tables to better Word-compatible formats.
 
-This script transforms markdown tables into properly formatted content where
-table headers become bold labels and values become regular text.
+This script transforms markdown tables into properly formatted content 
+for Word documents, addressing various rendering issues.
 
 Usage:
     python tables_to_sections.py <input_file.md> [output_file.md] [format]
 
 Formats:
-    'definition' - **Header:** value (RECOMMENDED - clean, no excessive headings)
+    'split'      - Each row as separate small table (RECOMMENDED for Word)
+    'definition' - **Header:** value (bold labels, no headings)
     'columns'    - ## Header\nvalue (headers as actual headings)
     'pair'       - ### Header1: Value1 | Header2: Value2 (compact, all in one heading)
     'list'       - - **Header:** value (bullet list)
@@ -110,6 +111,24 @@ def table_to_list_format(headers, rows):
     return '\n'.join(lines)
 
 
+def table_to_split_format(headers, rows):
+    """Convert table to multiple small tables - each row becomes its own table"""
+    tables = []
+    for row in rows:
+        if len(row) != len(headers):
+            continue
+        # Create a small table for this row
+        table_lines = []
+        # Header row
+        table_lines.append('| ' + ' | '.join(headers) + ' |')
+        # Separator row
+        table_lines.append('|' + '|'.join([' --- ' for _ in headers]) + '|')
+        # Data row
+        table_lines.append('| ' + ' | '.join(row) + ' |')
+        tables.append('\n'.join(table_lines))
+    return '\n\n'.join(tables)
+
+
 def convert_markdown(input_path, output_path=None, format_type='pair', heading_level=3):
     """
     Convert markdown file tables to sections.
@@ -162,6 +181,11 @@ def convert_markdown(input_path, output_path=None, format_type='pair', heading_l
                         table_data['headers'], 
                         table_data['rows']
                     )
+                elif format_type == 'split':
+                    converted = table_to_split_format(
+                        table_data['headers'], 
+                        table_data['rows']
+                    )
                 else:  # 'pair' format (default)
                     converted = table_to_pair_format(
                         table_data['headers'], 
@@ -197,18 +221,19 @@ if __name__ == "__main__":
         print("Usage: python tables_to_sections.py <input_file.md> [output_file.md] [format] [heading_level]")
         print()
         print("Formats:")
-        print("  'definition' - **Header:** value (bold labels, no headings) - RECOMMENDED")
+        print("  'split'      - Each row as separate small table (RECOMMENDED for Word) - DEFAULT")
+        print("  'definition' - **Header:** value (bold labels, no headings)")
         print("  'columns'    - ## Header\\nvalue (headers as headings, level 2)")
         print("  'pair'       - ### Header1: Value1 | Header2: Value2 (compact)")
         print("  'list'       - - **Header:** value (bullet list)")
         print()
         print("Example:")
-        print("  python tables_to_sections.py docs/ra-03.md docs/ra-03-fixed.md definition")
+        print("  python tables_to_sections.py docs/ra-03.md docs/ra-03-fixed.md split")
         sys.exit(1)
     
     input_file = sys.argv[1]
     output_file = sys.argv[2] if len(sys.argv) > 2 else None
-    format_type = sys.argv[3] if len(sys.argv) > 3 else 'definition'
+    format_type = sys.argv[3] if len(sys.argv) > 3 else 'split'
     heading_level = int(sys.argv[4]) if len(sys.argv) > 4 else 2
     
     convert_markdown(input_file, output_file, format_type, heading_level)
