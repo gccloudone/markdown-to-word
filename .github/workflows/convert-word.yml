@@ -48,3 +48,28 @@ jobs:
           name: markdown-to-word
           path: output/markdown-to-word.docx
           archive: false
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: docs-markdown-${{ github.run_number }}-${{ github.run_id }}
+          release_name: Documentation Release ${{ github.run_number }}
+          body: |
+            Automated release containing converted Word document.
+            
+            Generated from markdown files on ${{ github.run_id }}.
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: output/markdown-to-word.docx
+          asset_name: markdown-to-word-${{ github.run_number }}.docx
+          asset_content_type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
