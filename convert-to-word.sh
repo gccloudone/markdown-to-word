@@ -15,10 +15,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR" && pwd)"
 
 # Allow overriding defaults with environment variables or CLI arguments.
+# Handle cases where fewer arguments are passed (for backward compatibility)
 TITLE="${1:-${TITLE:-$DEFAULT_TITLE}}"                # First argument, environment var, or default title
 MARKDOWN_FILE="${2:-${MARKDOWN_FILE:-$DEFAULT_MD_FILE}}"      # Second argument, env var, or default Markdown file
 OUTPUT_FILE="${3:-${OUTPUT_FILE:-$DEFAULT_OUTPUT_FILE}}"    # Third argument, env var, or default output DOCX file
 REFERENCE_DOC="${4:-${REFERENCE_DOC:-$DEFAULT_REFERENCE_DOC}}" # Fourth argument, env var, or default reference template
+
+# For backward compatibility: ensure reference_doc has a filename
+if [[ -z "$REFERENCE_DOC" || "$REFERENCE_DOC" == */ ]]; then
+    REFERENCE_DOC="${REFERENCE_DOC}template/ssc-template-v2.7.dotx"
+fi
+
 CONVERT_TABLES="${5:-${CONVERT_TABLES:-$DEFAULT_CONVERT_TABLES}}"  # Fifth argument: convert tables to sections
 TABLE_FORMAT="${6:-${TABLE_FORMAT:-$DEFAULT_TABLE_FORMAT}}"    # Sixth argument: table conversion format (pair/columns/list)
 CLASSIFICATION="${7:-${CLASSIFICATION:-$DEFAULT_CLASSIFICATION}}"  # Seventh argument: classification text (e.g., "UNCLASSIFIED")
