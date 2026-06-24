@@ -37,20 +37,19 @@ def update_header(docx_path, title_text, font_size=14, bold=True, align='center'
     for section in doc.sections:
         header = section.header
 
-        # Clear all existing paragraphs in the header
-        for paragraph in header.paragraphs:
-            # Remove all runs to clear formatting
-            for run in paragraph.runs:
-                run.clear()
-            # Clear the paragraph text
-            paragraph.clear()
+        # Get all paragraphs first to avoid iteration issues
+        paragraphs = list(header.paragraphs)
+        
+        # Clear all existing paragraphs by setting their text to empty
+        for paragraph in paragraphs:
+            paragraph.text = ''
 
-        # Remove all existing paragraphs
-        for paragraph in header.paragraphs[:]:
-            header._header.remove(paragraph._p)
-
-        # Add a new paragraph with the title
-        header_para = header.add_paragraph()
+        # Use or create first paragraph for the title
+        if paragraphs:
+            header_para = paragraphs[0]
+        else:
+            header_para = header.add_paragraph()
+        
         header_para.text = title_text
 
         # Apply styling

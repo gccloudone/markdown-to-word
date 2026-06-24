@@ -90,6 +90,14 @@ def tables_to_lists(docx_path, list_style='bullet', separator=': ',
     # Process tables in order
     tables = list(doc.tables)
     
+    # Create list paragraphs with proper styles
+    list_style_map = {
+        'bullet': 'List Bullet',
+        'number': 'List Number',
+        'dash': 'List Bullet 2'
+    }
+    style_name = list_style_map.get(list_style, 'List Bullet')
+    
     for table in tables:
         # Convert table to list text items
         text_items = table_to_list_text(table, list_style, separator)
@@ -97,37 +105,17 @@ def tables_to_lists(docx_path, list_style='bullet', separator=': ',
         if not text_items:
             continue
         
-        # Get the parent of the table
-        parent = table._tbl.getparent()
-        
-        # Find the index of the table in the parent
-        table_index = None
-        for i, child in enumerate(parent):
-            if child == table._tbl:
-                table_index = i
-                break
-        
-        if table_index is None:
-            continue
-        
-        # Create list paragraphs with proper styles
-        list_style_map = {
-            'bullet': 'List Bullet',
-            'number': 'List Number',
-            'dash': 'List Bullet 2'
-        }
-        style_name = list_style_map.get(list_style, 'List Bullet')
-        
-        # Insert list items before the table
+        # Add list items after the table
         for text in text_items:
-            para = doc.add_paragraph(text, style=style_name)
-            # Move the paragraph to before the table
-            parent.insert(table_index, para._p)
-            table_index += 1
+            doc.add_paragraph(text, style=style_name)
         
         # Remove the table if requested
         if remove_tables:
-            parent.remove(table._tbl)
+            # Access the table's element and remove it from its parent
+            tbl = table._tbl
+            parent = tbl.getparent()
+            if parent is not None:
+                parent.remove(tbl)
     
     doc.save(docx_path)
     print(f"Successfully converted {len(tables)} table(s) to lists in '{docx_path}'")
