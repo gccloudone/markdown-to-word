@@ -6,7 +6,9 @@ DEFAULT_TITLE="[Untitled Document]"        # Default title for the DOCX file
 DEFAULT_MD_FILE="docs/sample.md"          # Default Markdown file path
 DEFAULT_OUTPUT_FILE="output/sample.docx"  # Default output file path
 DEFAULT_REFERENCE_DOC="template/ssc-template-v2.7.dotx"  # Default reference template
-DEFAULT_CONVERT_TABLES="false"           # Convert tables to sections (true/false)
+DEFAULT_CONVERT_TABLES="true"            # Convert tables to sections (true/false)
+DEFAULT_TABLE_FORMAT="pair"               # Table conversion format: pair, columns, or list
+DEFAULT_CLASSIFICATION=""                 # Classification text (e.g., "UNCLASSIFIED")
 
 # Resolve the repository and script directories so relative paths work from any working directory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,15 +20,19 @@ MARKDOWN_FILE="${2:-${MARKDOWN_FILE:-$DEFAULT_MD_FILE}}"      # Second argument,
 OUTPUT_FILE="${3:-${OUTPUT_FILE:-$DEFAULT_OUTPUT_FILE}}"    # Third argument, env var, or default output DOCX file
 REFERENCE_DOC="${4:-${REFERENCE_DOC:-$DEFAULT_REFERENCE_DOC}}" # Fourth argument, env var, or default reference template
 CONVERT_TABLES="${5:-${CONVERT_TABLES:-$DEFAULT_CONVERT_TABLES}}"  # Fifth argument: convert tables to sections
+TABLE_FORMAT="${6:-${TABLE_FORMAT:-$DEFAULT_TABLE_FORMAT}}"    # Sixth argument: table conversion format (pair/columns/list)
+CLASSIFICATION="${7:-${CLASSIFICATION:-$DEFAULT_CLASSIFICATION}}"  # Seventh argument: classification text (e.g., "UNCLASSIFIED")
 
 # === FUNCTIONS ===
 usage() {
-    echo "Usage: $0 [title] [markdown_file] [output_file] [reference_doc] [convert_tables]"
+    echo "Usage: $0 [title] [markdown_file] [output_file] [reference_doc] [convert_tables] [table_format] [classification]"
     echo "  title: Title to set in the DOCX metadata (default: '$DEFAULT_TITLE')."
     echo "  markdown_file: Path to the Markdown file (default: '$DEFAULT_MD_FILE')."
     echo "  output_file: Path to the output DOCX file (default: '$DEFAULT_OUTPUT_FILE')."
     echo "  reference_doc: Path to the DOCX reference template (default: '$DEFAULT_REFERENCE_DOC')."
     echo "  convert_tables: Convert tables to sections for better Word rendering (default: '$DEFAULT_CONVERT_TABLES')."
+    echo "  table_format: Table conversion format - pair, columns, or list (default: '$DEFAULT_TABLE_FORMAT')."
+    echo "  classification: Classification text for header (default: '$DEFAULT_CLASSIFICATION')."
     exit 1
 }
 
@@ -72,9 +78,14 @@ fi
 # If convert_tables is true, pre-process the markdown to convert tables to sections
 if [[ "$CONVERT_TABLES" == "true" ]]; then
     echo "📋 Converting tables to sections for better Word rendering..."
-    TEMP_MD_FILE="$RUNNER_TEMP/$(date +%s)-converted.md"
-    python3 "$REPO_ROOT/scripts/tables_to_sections.py" "$MARKDOWN_FILE" "$TEMP_MD_FILE" "pair" "3"
-    MARKDOWN_FILE="$TEMP_MD_FILE"
+    TEMP_DIR="${RUNNER_TEMP:-/tmp}"
+    TEMP_MD_FILE="$TEMP_DIR/$(date +%s)-converted.md"
+    python3 "$REPO_ROOT/scripts/tables_to_sections.py" "$MARKDOWN_FILE" "$TEMP_MD_FILE" "$TABLE_FORMAT" "3"
+    if [[ -f "$TEMP_MD_FILE" ]]; then
+        MARKDOWN_FILE="$TEMP_MD_FILE"
+    else
+        echo "⚠️  Table conversion failed, using original file"
+    fi
 fi
 
 # === CHECK FILES ===
@@ -100,7 +111,7 @@ pandoc "$MARKDOWN_FILE" --metadata=title:"$TITLE" \
                         --reference-doc="$REFERENCE_DOC"
 
 # Run any additional processing scripts (if needed):
-python3 "$REPO_ROOT/scripts/update_header.py" "$OUTPUT_FILE" "$TITLE"
+python3 "$REPO_ROOT/scripts/update_header.py" "$OUTPUT_FILE" "$TITLE" "$CLASSIFICATION"
 
 # Update tables with better formatting (styles: grid, clean, borderless, custom)
 # Only run if we didn't convert tables to sections

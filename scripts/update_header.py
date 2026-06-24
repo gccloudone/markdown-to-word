@@ -4,16 +4,18 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
-def update_header(docx_path, title_text, font_size=14, bold=True, align='center'):
+def update_header(docx_path, title_text, classification=None, font_size=14, bold=True, align='center', classification_font_size=10):
     """
-    Update all headers in a Word document with the given title text.
+    Update all headers in a Word document with the given title text and classification.
 
     Args:
         docx_path: Path to the DOCX file
         title_text: Text to insert in the header
+        classification: Classification text (e.g., 'UNCLASSIFIED') (default: None)
         font_size: Font size for the header text (default: 14)
         bold: Whether to make the text bold (default: True)
         align: Text alignment - 'left', 'center', or 'right' (default: 'center')
+        classification_font_size: Font size for classification text (default: 10)
     """
     # Ensure the docx_path is an absolute path
     docx_path = os.path.abspath(docx_path)
@@ -52,11 +54,25 @@ def update_header(docx_path, title_text, font_size=14, bold=True, align='center'
         
         header_para.text = title_text
 
-        # Apply styling
+        # Apply styling to title
         for run in header_para.runs:
             run.font.size = Pt(font_size)
             run.font.bold = bold
         header_para.alignment = alignment
+        
+        # Add classification text below title if provided
+        if classification:
+            # Add a new paragraph for classification
+            if len(paragraphs) > 1:
+                class_para = paragraphs[1]
+            else:
+                class_para = header.add_paragraph()
+            
+            class_para.text = classification
+            for run in class_para.runs:
+                run.font.size = Pt(classification_font_size)
+                run.font.bold = False
+            class_para.alignment = alignment
 
     # Save the updated document
     doc.save(docx_path)
@@ -64,16 +80,18 @@ def update_header(docx_path, title_text, font_size=14, bold=True, align='center'
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python update_header.py <docx_path> <title_text> [font_size] [bold] [align]")
-        print("Example: python update_header.py doc.docx 'My Document Title' 16 True center")
+        print("Usage: python update_header.py <docx_path> <title_text> [classification] [font_size] [bold] [align] [classification_font_size]")
+        print("Example: python update_header.py doc.docx 'My Document Title' 'UNCLASSIFIED' 16 True center 10")
         sys.exit(1)
 
     docx_path = sys.argv[1]
     title_text = sys.argv[2]
 
     # Parse optional arguments with defaults
-    font_size = int(sys.argv[3]) if len(sys.argv) > 3 else 14
-    bold = sys.argv[4].lower() == 'true' if len(sys.argv) > 4 else True
-    align = sys.argv[5] if len(sys.argv) > 5 else 'center'
+    classification = sys.argv[3] if len(sys.argv) > 3 else None
+    font_size = int(sys.argv[4]) if len(sys.argv) > 4 else 14
+    bold = sys.argv[5].lower() == 'true' if len(sys.argv) > 5 else True
+    align = sys.argv[6] if len(sys.argv) > 6 else 'center'
+    classification_font_size = int(sys.argv[7]) if len(sys.argv) > 7 else 10
 
-    update_header(docx_path, title_text, font_size, bold, align)
+    update_header(docx_path, title_text, classification, font_size, bold, align, classification_font_size)
