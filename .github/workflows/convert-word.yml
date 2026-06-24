@@ -5,6 +5,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      markdown_file:
+        description: 'Path to the markdown file to convert'
+        required: false
+        default: 'docs/sample.md'
+      output_name:
+        description: 'Base name for the output file and release tag'
+        required: false
+        default: 'markdown-to-word'
 
 jobs:
   markdown-to-word:
@@ -14,7 +23,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Get timestamp
+        id: timestamp
+        run: echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+
+      - name: Extract filename from input
+        id: filename
+        run: |
+          if [ -n "${{ inputs.markdown_file }}" ]; then
+            BASENAME=$(basename -a "${{ inputs.markdown_file }}" | sed 's/\.md$//')
+          else
+            BASENAME="combined"
+          fi
+          echo "BASENAME=$BASENAME" >> $GITHUB_OUTPUT
+
       - name: Combine All Markdown Files
+        if: inputs.markdown_file == ''
         run: |
           cat <<EOF > "$RUNNER_TEMP/combined.md"
           ---
@@ -34,19 +58,23 @@ jobs:
           find docs -name "*.md" -not -name "combined.md" -exec sh -c 'cat "$@"; echo' _ {} + >> "$RUNNER_TEMP/combined.md"
           sed -E -i 's|(\.\./)+attachments|attachments|g' "$RUNNER_TEMP/combined.md"
 
+      - name: Use single markdown file
+        if: inputs.markdown_file != ''
+        run: cp "${{ inputs.markdown_file }}" "$RUNNER_TEMP/input.md"
+
       - name: Convert Markdown to Word
         uses: gccloudone/markdown-to-word@main
         with:
-          default_title: "[Untitled Document]"
-          markdown_file: "${{ runner.temp }}/combined.md"
-          output_file: "output/markdown-to-word.docx"
+          default_title: "${{ inputs.output_name }}"
+          markdown_file: "${{ inputs.markdown_file != '' && inputs.markdown_file || format('{0}/combined.md', runner.temp) }}"
+          output_file: "output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx"
           reference_doc: "template/ssc-template-v2.7.dotx"
 
       - name: Upload Word Document
         uses: actions/upload-artifact@v7
         with:
-          name: markdown-to-word
-          path: output/markdown-to-word.docx
+          name: ${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}
+          path: output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx
           archive: false
 
       - name: Create Release
@@ -55,14 +83,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: docs-markdown-${{ github.run_number }}-${{ github.run_id }}
-          release_name: Documentation Release ${{ github.run_number }}
+          tag_name: ${{ inputs.output_name || 'docs' }}-${{ steps.filename.outputs.BASENAME }}-${{ steps.timestamp.outputs.TIMESTAMP }}
+          release_name: Documentation release for ${{ inputs.output_name || steps.filename.outputs.BASENAME }}
           body: |
-            Automated release containing converted Word document.
+            Hello! This release contains a PDF and DOCX export generated from ${{ inputs.markdown_file || 'combined markdown files' }}.
             
-            Generated from markdown files on ${{ github.run_id }}.
+            You can download the files from the release assets below.
           draft: false
           prerelease: false
+          commitish: ${{ github.sha }}
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -70,6 +99,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: output/markdown-to-word.docx
-          asset_name: markdown-to-word-${{ github.run_number }}.docx
+          asset_path: output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx
+          asset_name: ${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx
           asset_content_type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
