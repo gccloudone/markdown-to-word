@@ -6,6 +6,7 @@ DEFAULT_TITLE="[Untitled Document]"        # Default title for the DOCX file
 DEFAULT_MD_FILE="docs/sample.md"          # Default Markdown file path
 DEFAULT_OUTPUT_FILE="output/sample.docx"  # Default output file path
 DEFAULT_REFERENCE_DOC="template/ssc-template-v2.7.dotx"  # Default reference template
+DEFAULT_CONVERT_TABLES="false"           # Convert tables to sections (true/false)
 
 # Resolve the repository and script directories so relative paths work from any working directory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,14 +17,16 @@ TITLE="${1:-${TITLE:-$DEFAULT_TITLE}}"                # First argument, environm
 MARKDOWN_FILE="${2:-${MARKDOWN_FILE:-$DEFAULT_MD_FILE}}"      # Second argument, env var, or default Markdown file
 OUTPUT_FILE="${3:-${OUTPUT_FILE:-$DEFAULT_OUTPUT_FILE}}"    # Third argument, env var, or default output DOCX file
 REFERENCE_DOC="${4:-${REFERENCE_DOC:-$DEFAULT_REFERENCE_DOC}}" # Fourth argument, env var, or default reference template
+CONVERT_TABLES="${5:-${CONVERT_TABLES:-$DEFAULT_CONVERT_TABLES}}"  # Fifth argument: convert tables to sections
 
 # === FUNCTIONS ===
 usage() {
-    echo "Usage: $0 [title] [markdown_file] [output_file] [reference_doc]"
+    echo "Usage: $0 [title] [markdown_file] [output_file] [reference_doc] [convert_tables]"
     echo "  title: Title to set in the DOCX metadata (default: '$DEFAULT_TITLE')."
     echo "  markdown_file: Path to the Markdown file (default: '$DEFAULT_MD_FILE')."
     echo "  output_file: Path to the output DOCX file (default: '$DEFAULT_OUTPUT_FILE')."
     echo "  reference_doc: Path to the DOCX reference template (default: '$DEFAULT_REFERENCE_DOC')."
+    echo "  convert_tables: Convert tables to sections for better Word rendering (default: '$DEFAULT_CONVERT_TABLES')."
     exit 1
 }
 
@@ -65,6 +68,15 @@ if [[ "$REFERENCE_DOC" != /* ]]; then
     REFERENCE_DOC="$REPO_ROOT/$REFERENCE_DOC"
 fi
 
+# === CONVERT TABLES TO SECTIONS (optional) ===
+# If convert_tables is true, pre-process the markdown to convert tables to sections
+if [[ "$CONVERT_TABLES" == "true" ]]; then
+    echo "📋 Converting tables to sections for better Word rendering..."
+    TEMP_MD_FILE="$RUNNER_TEMP/$(date +%s)-converted.md"
+    python3 "$REPO_ROOT/scripts/tables_to_sections.py" "$MARKDOWN_FILE" "$TEMP_MD_FILE" "pair" "3"
+    MARKDOWN_FILE="$TEMP_MD_FILE"
+fi
+
 # === CHECK FILES ===
 if [[ ! -f "$MARKDOWN_FILE" ]]; then
     echo "❌ Error: Markdown file '$MARKDOWN_FILE' not found."
@@ -89,8 +101,12 @@ pandoc "$MARKDOWN_FILE" --metadata=title:"$TITLE" \
 
 # Run any additional processing scripts (if needed):
 python3 "$REPO_ROOT/scripts/update_header.py" "$OUTPUT_FILE" "$TITLE"
+
 # Update tables with better formatting (styles: grid, clean, borderless, custom)
-python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE" "clean" "6" "4472C4" "6" "center" "True" "True" "D9E2F3" "False"
+# Only run if we didn't convert tables to sections
+if [[ "$CONVERT_TABLES" != "true" ]]; then
+    python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE" "clean" "6" "4472C4" "6" "center" "True" "True" "D9E2F3" "False"
+fi
 # Alternative: Convert tables to lists (uncomment below and comment above if preferred)
 # python3 "$REPO_ROOT/scripts/tables_to_lists.py" "$OUTPUT_FILE" "bullet" ": " "True"
 EXIT_CODE=$?
