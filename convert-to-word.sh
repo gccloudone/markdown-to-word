@@ -89,7 +89,10 @@ pandoc "$MARKDOWN_FILE" --metadata=title:"$TITLE" \
 
 # Run any additional processing scripts (if needed):
 python3 "$REPO_ROOT/scripts/update_header.py" "$OUTPUT_FILE" "$TITLE"
-python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE"
+# Update tables with better formatting (styles: grid, clean, borderless, custom)
+python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE" "clean" "6" "4472C4" "6" "center" "True" "True" "D9E2F3" "False"
+# Alternative: Convert tables to lists (uncomment below and comment above if preferred)
+# python3 "$REPO_ROOT/scripts/tables_to_lists.py" "$OUTPUT_FILE" "bullet" ": " "True"
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -eq 0 ]]; then
