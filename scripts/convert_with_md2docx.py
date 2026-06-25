@@ -14,31 +14,6 @@ Dependencies:
 
 import sys
 import os
-
-# Fix for GitHub Actions: add user site-packages to path
-# GitHub Actions installs packages to ~/.local/lib/pythonX.Y/site-packages
-# but doesn't automatically add it to PYTHONPATH
-if sys.platform.startswith('linux'):
-    # Try to detect and add user site-packages
-    possible_paths = [
-        os.path.expanduser('~/.local/lib/python3.12/site-packages'),
-        os.path.expanduser('~/.local/lib/python3.11/site-packages'),
-        os.path.expanduser('~/.local/lib/python3.10/site-packages'),
-    ]
-    for path in possible_paths:
-        if os.path.exists(path) and path not in sys.path:
-            sys.path.insert(0, path)
-            break
-
-    # Also try using site module
-    try:
-        import site
-        user_site = site.getusersitepackages()
-        if user_site and user_site not in sys.path:
-            sys.path.insert(0, user_site)
-    except:
-        pass
-
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT

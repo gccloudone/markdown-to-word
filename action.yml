@@ -24,18 +24,17 @@ runs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Install Python Dependencies
+    - name: Convert Markdown to DOCX
       shell: bash
       run: |
-        echo "Installing Python dependencies..."
-        python3 -m pip install --user -r "${{ github.action_path }}/requirements.txt"
-
-    - name: Extract title from markdown metadata
-      id: extract_title
-      shell: bash
-      run: |
+        # Use virtual environment to avoid permission issues
+        python3 -m venv /tmp/venv
+        source /tmp/venv/bin/activate
+        pip install -r "${{ github.action_path }}/requirements.txt"
+        
+        # Extract title from metadata
         TITLE="${{ inputs.default_title }}"
-        python3 "${{ github.action_path }}/scripts/extract_metadata.py" "${{ inputs.markdown_file }}" > /tmp/metadata.txt 2>&1 || true
+        python "${{ github.action_path }}/scripts/extract_metadata.py" "${{ inputs.markdown_file }}" > /tmp/metadata.txt 2>&1 || true
         if [ -f /tmp/metadata.txt ]; then
           while IFS= read -r line; do
             if [[ "$line" == Metadata* ]]; then
@@ -50,13 +49,12 @@ runs:
             fi
           done < /tmp/metadata.txt
         fi
-        echo "title=$TITLE" >> $GITHUB_OUTPUT
-
-    - name: Run Markdown to Word Conversion
-      shell: bash
-      run: |
-        python3 "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
+        
+        # Convert to DOCX
+        python "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
           "${{ inputs.markdown_file }}" \
           "${{ inputs.output_file }}" \
-          "${{ steps.extract_title.outputs.title }}" \
+          "$TITLE" \
           "${{ inputs.classification }}"
+        
+        echo "title=$TITLE" >> $GITHUB_OUTPUT
