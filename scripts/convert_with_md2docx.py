@@ -17,6 +17,18 @@ import os
 
 # Fix for GitHub Actions: add user site-packages to path
 if sys.platform.startswith('linux'):
+    # GitHub Actions uses ~/.local/lib/python3.X/site-packages
+    user_site = os.path.expanduser('~/.local/lib/python3.12/site-packages')
+    if os.path.exists(user_site) and user_site not in sys.path:
+        sys.path.insert(0, user_site)
+    
+    # Also try common fallback paths
+    for version in ['3.11', '3.10', '3.9']:
+        fallback_path = os.path.expanduser(f'~/.local/lib/python{version}/site-packages')
+        if os.path.exists(fallback_path) and fallback_path not in sys.path:
+            sys.path.insert(0, fallback_path)
+    
+    # Try using site module as well
     try:
         import site
         user_site = site.getusersitepackages()
