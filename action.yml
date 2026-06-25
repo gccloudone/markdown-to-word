@@ -29,7 +29,6 @@ runs:
       run: |
         echo "Installing Python dependencies..."
         python3 -m pip install --user -r "${{ github.action_path }}/requirements.txt"
-        echo "PYTHONPATH=$HOME/.local/lib/python$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages:$PYTHONPATH" >> $GITHUB_ENV
 
     - name: Extract title from markdown metadata
       id: extract_title
