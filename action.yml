@@ -1,5 +1,5 @@
 name: "Markdown to Word Converter"
-description: "Converts a Markdown file to a Word document using Pandoc."
+description: "Converts a Markdown file to a Word document using md2docx-python with custom header formatting."
 author: "gccloudone"
 
 inputs:
@@ -13,18 +13,6 @@ inputs:
     description: "Path to the output DOCX file."
     required: false
     default: "output/output.docx"
-  reference_doc:
-    description: "Path to the DOCX reference template (relative to action path)."
-    required: false
-    default: "template/ssc-template-v2.7.dotx"
-  convert_tables:
-    description: "Convert tables to sections for better Word rendering."
-    required: false
-    default: "true"
-  table_format:
-    description: "Table conversion format (split, definition, columns, pair, or list)."
-    required: false
-    default: "split"
   classification:
     description: "Classification text for header (e.g., UNCLASSIFIED)."
     required: false
@@ -36,39 +24,39 @@ runs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: '24'
-
-    - name: Install Pandoc
-      shell: bash
-      run: |
-        echo "Installing Pandoc"
-        wget https://github.com/jgm/pandoc/releases/download/3.9.0.2/pandoc-3.9.0.2-1-amd64.deb
-        sudo dpkg -i pandoc-3.9.0.2-1-amd64.deb
-        pandoc --version
-
-    - name: Install Mermaid CLI
-      shell: bash
-      run: |
-        echo "Installing Mermaid CLI..."
-        npm install -g @mermaid-js/mermaid-cli
-        mmdc -V
-
     - name: Install Python Dependencies
       shell: bash
       run: |
         echo "Installing Python dependencies..."
         pip3 install -r "${{ github.action_path }}/requirements.txt"
 
+    - name: Extract title from markdown metadata
+      id: extract_title
+      shell: bash
+      run: |
+        TITLE="${{ inputs.default_title }}"
+        python3 "${{ github.action_path }}/scripts/extract_metadata.py" "${{ inputs.markdown_file }}" > /tmp/metadata.txt 2>&1 || true
+        if [ -f /tmp/metadata.txt ]; then
+          while IFS= read -r line; do
+            if [[ "$line" == Metadata* ]]; then
+              continue
+            fi
+            if [[ "$line" == *:* ]]; then
+              key=$(echo "$line" | cut -d: -f1 | xargs)
+              value=$(echo "$line" | cut -d: -f2- | xargs)
+              if [ "$key" = "title" ] && [ -z "$TITLE" ]; then
+                TITLE="$value"
+              fi
+            fi
+          done < /tmp/metadata.txt
+        fi
+        echo "title=$TITLE" >> $GITHUB_OUTPUT
+
     - name: Run Markdown to Word Conversion
       shell: bash
       run: |
-        "${{ github.action_path }}/convert-to-word.sh" "${{ inputs.default_title }}" \
-                                                       "${{ inputs.markdown_file }}" \
-                                                       "${{ inputs.output_file }}" \
-                                                       "${{ github.action_path }}/${{ inputs.reference_doc }}" \
-                                                       "${{ inputs.convert_tables }}" \
-                                                       "${{ inputs.table_format }}" \
-                                                       "${{ inputs.classification }}"
+        python3 "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
+          "${{ inputs.markdown_file }}" \
+          "${{ inputs.output_file }}" \
+          "${{ steps.extract_title.outputs.title }}" \
+          "${{ inputs.classification }}"
