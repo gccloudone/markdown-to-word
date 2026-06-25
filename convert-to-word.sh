@@ -150,10 +150,8 @@ pandoc "$MARKDOWN_FILE" --metadata=title:"$TITLE" \
 python3 "$REPO_ROOT/scripts/update_header.py" "$OUTPUT_FILE" "$TITLE" "$CLASSIFICATION"
 
 # Update tables with better formatting (styles: grid, clean, borderless, custom)
-# Only run if we didn't convert tables to sections
-if [[ "$CONVERT_TABLES" != "true" ]]; then
-    python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE" "clean" "6" "4472C4" "6" "center" "True" "True" "D9E2F3" "False"
-fi
+# Always run table styling, even with converted tables
+python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE" "clean" "6" "4472C4" "4" "center" "True" "True" "D9E2F3" "False" "9"
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -eq 0 ]]; then

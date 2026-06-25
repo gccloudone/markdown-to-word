@@ -32,7 +32,8 @@ def _set_table_border(table, **kwargs):
 
 def update_tables(docx_path, style='grid', border_size=6, border_color='auto', 
                   cell_padding=4, text_alignment='center', header_row=True,
-                  header_bold=True, header_bg_color=None, alternating_rows=False):
+                  header_bold=True, header_bg_color=None, alternating_rows=False,
+                  font_size=10):
     """
     Update all tables in a Word document with better formatting.
     
@@ -47,6 +48,7 @@ def update_tables(docx_path, style='grid', border_size=6, border_color='auto',
         header_bold: Make header text bold (default: True)
         header_bg_color: Header background color as hex string (default: None)
         alternating_rows: Apply alternating row colors (default: False)
+        font_size: Font size in points for table text (default: 10)
     """
     docx_path = os.path.abspath(docx_path)
 
@@ -116,6 +118,10 @@ def update_tables(docx_path, style='grid', border_size=6, border_color='auto',
                     
                     # Vertical alignment
                     cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                    
+                    # Apply font size to all runs in the cell
+                    for run in paragraph.runs:
+                        run.font.size = Pt(font_size)
                     
                     # Header row formatting
                     if header_row and row == table.rows[0]:
