@@ -61,6 +61,4 @@ runs:
                                                        "${{ inputs.markdown_file }}" \
                                                        "${{ inputs.output_file }}" \
                                                        "${{ github.action_path }}/${{ inputs.reference_doc }}" \
-                                                       "false" \
-                                                       "${{ inputs.table_format }}" \
                                                        "${{ inputs.classification }}"
