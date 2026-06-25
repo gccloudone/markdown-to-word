@@ -22,6 +22,14 @@ on:
         description: 'Classification text (e.g., UNCLASSIFIED)'
         required: false
         default: 'UNCLASSIFIED'
+      convert_tables:
+        description: 'Convert tables to sections'
+        required: false
+        default: 'true'
+      table_format:
+        description: 'Table conversion format (split, definition, columns, pair, or list)'
+        required: false
+        default: 'split'
 
 jobs:
   markdown-to-word:
@@ -60,17 +68,12 @@ jobs:
 
       - name: Convert Markdown to Word
         run: |
-          # Install dependencies to user site-packages
-          python3 -m pip install --user -r "${{ github.action_path }}/requirements.txt"
-          
-          # Add user site-packages to PYTHONPATH
-          PYTHON_USER_SITE=$(python3 -c "import site; print(site.getusersitepackages())")
-          export PYTHONPATH="$PYTHON_USER_SITE:$PYTHONPATH"
-          
-          python3 "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
+          "${{ github.action_path }}/convert-to-word.sh" "${{ steps.extract_title.outputs.title }}" \
             "${{ inputs.markdown_file != '' && inputs.markdown_file || format('{0}/combined.md', runner.temp) }}" \
             "output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx" \
-            "${{ steps.extract_title.outputs.title }}" \
+            "${{ github.action_path }}/template/ssc-template-v2.7.dotx" \
+            "${{ inputs.convert_tables }}" \
+            "${{ inputs.table_format }}" \
             "${{ inputs.classification }}"
 
       - name: Upload Word Document

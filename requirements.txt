@@ -1,3 +1,2 @@
 python-docx
 PyYAML
-md2docx-python
