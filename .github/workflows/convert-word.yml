@@ -25,7 +25,7 @@ on:
       convert_tables:
         description: 'Convert tables to sections'
         required: false
-        default: 'true'
+        default: 'false'
       table_format:
         description: 'Table conversion format (split, definition, columns, pair, or list)'
         required: false
@@ -72,7 +72,7 @@ jobs:
             "${{ inputs.markdown_file != '' && inputs.markdown_file || format('{0}/combined.md', runner.temp) }}" \
             "output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx" \
             "${{ github.action_path }}/template/ssc-template-v2.7.dotx" \
-            "${{ inputs.convert_tables }}" \
+            "false" \
             "${{ inputs.table_format }}" \
             "${{ inputs.classification }}"
 

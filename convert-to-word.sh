@@ -6,7 +6,7 @@ DEFAULT_TITLE="[Untitled Document]"        # Default title for the DOCX file
 DEFAULT_MD_FILE="docs/sample.md"          # Default Markdown file path
 DEFAULT_OUTPUT_FILE="output/sample.docx"  # Default output file path
 DEFAULT_REFERENCE_DOC="template/ssc-template-v2.7.dotx"  # Default reference template
-DEFAULT_CONVERT_TABLES="true"            # Convert tables to sections (true/false)
+DEFAULT_CONVERT_TABLES="false"           # Convert tables to sections (true/false) - FALSE = use Pandoc native tables
 DEFAULT_TABLE_FORMAT="split"              # Table conversion format: split, definition, columns, pair, or list
 DEFAULT_CLASSIFICATION="UNCLASSIFIED"                 # Classification text (e.g., "UNCLASSIFIED")
 
@@ -151,7 +151,7 @@ python3 "$REPO_ROOT/scripts/update_header.py" "$OUTPUT_FILE" "$TITLE" "$CLASSIFI
 
 # Update tables with better formatting (styles: grid, clean, borderless, custom)
 # Always run table styling, even with converted tables
-python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE" "clean" "6" "4472C4" "4" "center" "True" "True" "D9E2F3" "False" "9"
+python3 "$REPO_ROOT/scripts/update_tables.py" "$OUTPUT_FILE" "clean" "6" "4472C4" "4" "left" "True" "True" "D9E2F3" "False" "9"
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -eq 0 ]]; then

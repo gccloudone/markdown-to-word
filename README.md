@@ -40,7 +40,8 @@ npm install -g @mermaid-js/mermaid-cli
 
 ## Features
 
-- **Table pre-processing** - Converts markdown tables to small individual tables (split format) for better Word rendering
+- **Native table support** - Pandoc converts markdown tables directly to Word tables (no pre-processing)
+- **Table styling** - Applied after conversion: borders, alignment, bold headers, smaller font
 - **Custom headers** - Title and classification (e.g., UNCLASSIFIED) are added to the document header
 - **YAML frontmatter** - Automatically extracts title and classification from markdown metadata
 - **Mermaid diagram support** - Converts Mermaid diagrams to images
@@ -51,8 +52,9 @@ npm install -g @mermaid-js/mermaid-cli
 - The script resolves relative paths from the repository root.
 - Output directories are created automatically.
 - The title and classification are added to the Word document header.
-- Markdown tables are pre-processed into small individual tables for better Word rendering.
+- Markdown tables are converted natively by Pandoc, then styled with python-docx.
 - Uses a reference DOCX template for consistent styling.
+- Table styling includes: borders, left alignment, bold headers, 9pt font.
 
 ## GitHub Action
 
