@@ -123,6 +123,11 @@ def convert_with_md2docx(input_md, output_docx, title=None, classification=None)
         
         print(f"📄 Converting '{input_md}' to '{output_docx}' using md2docx...")
         
+        # Ensure output directory exists
+        output_dir = os.path.dirname(output_docx)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+        
         # Convert markdown to DOCX
         convert(input_md, output_docx)
         
