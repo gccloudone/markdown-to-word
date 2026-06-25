@@ -1,5 +1,5 @@
 name: "Markdown to Word Converter"
-description: "Converts a Markdown file to a Word document using md2docx-python with custom header formatting."
+description: "Converts a Markdown file to a Word document using md2docx with custom header formatting."
 author: "gccloudone"
 
 inputs:

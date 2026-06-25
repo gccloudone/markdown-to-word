@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Convert markdown to DOCX using md2docx-python library with custom header formatting.
 
@@ -9,7 +9,7 @@ Usage:
     python convert_with_md2docx.py <input.md> <output.docx> [title] [classification]
 
 Dependencies:
-    pip install md2docx-python python-docx
+    pip install md2docx python-docx
 """
 
 import sys
