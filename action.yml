@@ -1,5 +1,5 @@
 name: "Markdown to Word Converter"
-description: "Converts a Markdown file to a Word document using md2docx with custom header formatting."
+description: "Converts a Markdown file to a Word document using md2docx-python with custom header formatting."
 author: "gccloudone"
 
 inputs:
@@ -27,14 +27,16 @@ runs:
     - name: Convert Markdown to DOCX
       shell: bash
       run: |
-        # Use virtual environment to avoid permission issues
-        python3 -m venv /tmp/venv
-        source /tmp/venv/bin/activate
-        pip install -r "${{ github.action_path }}/requirements.txt"
+        # Install dependencies to user site-packages
+        python3 -m pip install --user -r "${{ github.action_path }}/requirements.txt"
+        
+        # Add user site-packages to PYTHONPATH
+        PYTHON_USER_SITE=$(python3 -c "import site; print(site.getusersitepackages())")
+        export PYTHONPATH="$PYTHON_USER_SITE:$PYTHONPATH"
         
         # Extract title from metadata
         TITLE="${{ inputs.default_title }}"
-        python "${{ github.action_path }}/scripts/extract_metadata.py" "${{ inputs.markdown_file }}" > /tmp/metadata.txt 2>&1 || true
+        python3 "${{ github.action_path }}/scripts/extract_metadata.py" "${{ inputs.markdown_file }}" > /tmp/metadata.txt 2>&1 || true
         if [ -f /tmp/metadata.txt ]; then
           while IFS= read -r line; do
             if [[ "$line" == Metadata* ]]; then
@@ -51,7 +53,7 @@ runs:
         fi
         
         # Convert to DOCX
-        python "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
+        python3 "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
           "${{ inputs.markdown_file }}" \
           "${{ inputs.output_file }}" \
           "$TITLE" \

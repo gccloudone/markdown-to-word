@@ -60,12 +60,14 @@ jobs:
 
       - name: Convert Markdown to Word
         run: |
-          # Use virtual environment
-          python3 -m venv /tmp/venv
-          source /tmp/venv/bin/activate
-          pip install -r "${{ github.action_path }}/requirements.txt"
+          # Install dependencies to user site-packages
+          python3 -m pip install --user -r "${{ github.action_path }}/requirements.txt"
           
-          python "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
+          # Add user site-packages to PYTHONPATH
+          PYTHON_USER_SITE=$(python3 -c "import site; print(site.getusersitepackages())")
+          export PYTHONPATH="$PYTHON_USER_SITE:$PYTHONPATH"
+          
+          python3 "${{ github.action_path }}/scripts/convert_with_md2docx.py" \
             "${{ inputs.markdown_file != '' && inputs.markdown_file || format('{0}/combined.md', runner.temp) }}" \
             "output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx" \
             "${{ steps.extract_title.outputs.title }}" \
