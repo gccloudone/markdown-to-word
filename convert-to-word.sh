@@ -81,6 +81,37 @@ if [[ "$REFERENCE_DOC" != /* ]]; then
     REFERENCE_DOC="$REPO_ROOT/$REFERENCE_DOC"
 fi
 
+# === EXTRACT METADATA FROM YAML FRONTMATTER ===
+echo "📖 Checking for YAML frontmatter metadata..."
+python3 "$REPO_ROOT/scripts/extract_metadata.py" "$MARKDOWN_FILE" > /tmp/metadata.txt 2>&1 || true
+
+# Extract metadata values
+if [[ -f /tmp/metadata.txt ]]; then
+    while IFS= read -r line; do
+        if [[ "$line" == Metadata* ]]; then
+            continue
+        fi
+        if [[ "$line" == *:* ]]; then
+            key=$(echo "$line" | cut -d: -f1 | xargs)
+            value=$(echo "$line" | cut -d: -f2- | xargs)
+            case "$key" in
+                title)
+                    if [[ -z "$TITLE" || "$TITLE" == "$DEFAULT_TITLE" ]]; then
+                        TITLE="$value"
+                    fi
+                    ;;
+                classification)
+                    if [[ -z "$CLASSIFICATION" || "$CLASSIFICATION" == "$DEFAULT_CLASSIFICATION" ]]; then
+                        CLASSIFICATION="$value"
+                    fi
+                    ;;
+            esac
+        fi
+    done < /tmp/metadata.txt
+    
+    echo "   ✅ Metadata: title='$TITLE', classification='$CLASSIFICATION'"
+fi
+
 # === CONVERT TABLES TO SECTIONS (optional) ===
 # If convert_tables is true, pre-process the markdown to convert tables to sections
 if [[ "$CONVERT_TABLES" == "true" ]]; then
