@@ -10,6 +10,9 @@ Usage:
 
 Dependencies:
     pip install md2docx-python python-docx
+    
+    Note: The md2docx-python package is imported as:
+    from md2docx_python.src.md2docx_python import markdown_to_word
 """
 
 import sys
@@ -115,7 +118,8 @@ def convert_with_md2docx(input_md, output_docx, title=None, classification=None)
         classification: Classification text (optional)
     """
     try:
-        from md2docx import convert
+        # Correct import path for md2docx-python
+        from md2docx_python.src.md2docx_python import markdown_to_word as convert
         
         print(f"📄 Converting '{input_md}' to '{output_docx}' using md2docx...")
         
