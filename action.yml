@@ -1,5 +1,5 @@
 name: "Markdown to Word Converter"
-description: "Converts a Markdown file to a Word document using Pandoc."
+description: "Converts a Markdown file to a Word document using Pandoc with table pre-processing for better Word rendering."
 author: "gccloudone"
 
 inputs:
@@ -14,15 +14,24 @@ inputs:
     required: false
     default: "output/output.docx"
   reference_doc:
-    description: "Path to the DOCX reference template."
+    description: "Path to the DOCX reference template (relative to action path)."
     required: false
     default: "template/ssc-template-v2.7.dotx"
+  classification:
+    description: "Classification text for header (e.g., UNCLASSIFIED)."
+    required: false
+    default: "UNCLASSIFIED"
 
 runs:
   using: "composite"
   steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: '24'
 
     - name: Install Pandoc
       shell: bash
@@ -43,7 +52,7 @@ runs:
       shell: bash
       run: |
         echo "Installing Python dependencies..."
-        pip3 install python-docx
+        pip3 install -r "${{ github.action_path }}/requirements.txt"
 
     - name: Run Markdown to Word Conversion
       shell: bash
@@ -51,4 +60,5 @@ runs:
         "${{ github.action_path }}/convert-to-word.sh" "${{ inputs.default_title }}" \
                                                        "${{ inputs.markdown_file }}" \
                                                        "${{ inputs.output_file }}" \
-                                                       "${{ github.action_path }}/${{ inputs.reference_doc }}"
+                                                       "${{ github.action_path }}/${{ inputs.reference_doc }}" \
+                                                       "${{ inputs.classification }}"

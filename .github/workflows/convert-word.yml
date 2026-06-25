@@ -5,6 +5,31 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      markdown_file:
+        description: 'Path to the markdown file to convert'
+        required: false
+        default: 'docs/sample.md'
+      output_name:
+        description: 'Base name for the output file and release tag'
+        required: false
+        default: 'markdown-to-word'
+      title:
+        description: 'Document title (defaults to filename if not provided)'
+        required: false
+        default: ''
+      classification:
+        description: 'Classification text (e.g., UNCLASSIFIED)'
+        required: false
+        default: 'UNCLASSIFIED'
+      convert_tables:
+        description: 'Convert tables to sections'
+        required: false
+        default: 'false'
+      table_format:
+        description: 'Table conversion format (split, definition, columns, pair, or list)'
+        required: false
+        default: 'split'
 
 jobs:
   markdown-to-word:
@@ -12,39 +37,74 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Combine All Markdown Files
+      - name: Get timestamp
+        id: timestamp
+        run: echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+
+      - name: Extract filename from input
+        id: filename
         run: |
-          cat <<EOF > "$RUNNER_TEMP/combined.md"
-          ---
-          title: "GCCO"
-          subtitle: "Markdown to Word"
-          date: "$(date +%Y-%m-%d)"
-          version: "v0.0.1"
-          ---
+          if [ -n "${{ inputs.markdown_file }}" ]; then
+            BASENAME=$(basename -a "${{ inputs.markdown_file }}" | sed 's/\.md$//')
+          else
+            BASENAME="combined"
+          fi
+          echo "BASENAME=$BASENAME" >> $GITHUB_OUTPUT
 
-          \newpage
-
-          ::: {#toc}
-          :::
-
-          \newpage
-          EOF
-          find docs -name "*.md" -not -name "combined.md" -exec sh -c 'cat "$@"; echo' _ {} + >> "$RUNNER_TEMP/combined.md"
-          sed -E -i 's|(\.\./)+attachments|attachments|g' "$RUNNER_TEMP/combined.md"
+      - name: Extract title from filename
+        id: extract_title
+        run: |
+          if [ -n "${{ inputs.title }}" ]; then
+            TITLE="${{ inputs.title }}"
+          else
+            # Extract title from markdown filename
+            BASENAME=$(basename "${{ inputs.markdown_file }}" .md)
+            # Convert to title case (e.g., ra-03 -> RA-03)
+            TITLE=$(echo "$BASENAME" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1')
+          fi
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
 
       - name: Convert Markdown to Word
-        uses: gccloudone/markdown-to-word@main
-        with:
-          default_title: "[Untitled Document]"
-          markdown_file: "${{ runner.temp }}/combined.md"
-          output_file: "output/markdown-to-word.docx"
-          reference_doc: "template/ssc-template-v2.7.dotx"
+        run: |
+          "${{ github.action_path }}/convert-to-word.sh" "${{ steps.extract_title.outputs.title }}" \
+            "${{ inputs.markdown_file != '' && inputs.markdown_file || format('{0}/combined.md', runner.temp) }}" \
+            "output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx" \
+            "${{ github.action_path }}/template/ssc-template-v2.7.dotx" \
+            "false" \
+            "${{ inputs.table_format }}" \
+            "${{ inputs.classification }}"
 
       - name: Upload Word Document
         uses: actions/upload-artifact@v7
         with:
-          name: markdown-to-word
-          path: output/markdown-to-word.docx
+          name: ${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}
+          path: output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx
           archive: false
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ inputs.output_name || 'docs' }}-${{ steps.filename.outputs.BASENAME }}-${{ steps.timestamp.outputs.TIMESTAMP }}
+          release_name: Documentation release for ${{ inputs.output_name || steps.filename.outputs.BASENAME }}
+          body: |
+            Hello! This release contains a PDF and DOCX export generated from ${{ inputs.markdown_file || 'combined markdown files' }}.
+            
+            You can download the files from the release assets below.
+          draft: false
+          prerelease: false
+          commitish: ${{ github.sha }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: output/${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx
+          asset_name: ${{ inputs.output_name || 'markdown-to-word' }}-${{ steps.timestamp.outputs.TIMESTAMP }}.docx
+          asset_content_type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
