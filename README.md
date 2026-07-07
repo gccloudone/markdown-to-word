@@ -52,6 +52,4 @@ jobs:
           reference_doc: "template/ssc-template-v2.7.dotx"
 ```
 
-> Important: This composite action does not perform its own repository checkout. The calling workflow must check out the repository before invoking the action.
-
 The action installs dependencies from `requirements.txt` and then runs `convert-to-word.sh` with the provided inputs.
